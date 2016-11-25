@@ -19,6 +19,23 @@ app.use(session({
   saveUninitialized: true,
 }))
 
+const WHITELISTED_PAGES = ["/", "/login"]
+app.use((req, res, next) => {
+  console.log("AUTHORIZING ", req.url);
+  if(!WHITELISTED_PAGES.includes(req.url)) {
+    const logged_in = req.session.user_id
+    if(!logged_in) {
+      res.redirect("/login")
+    }
+  }
+  next();
+})
+
+app.use((req, res, next) => {
+  console.log("!!!!!!!!!!!!!! OTHER MIDDLEWARE");
+  next();
+})
+
 const userDatabase = [{ id: 1, name: "bob", password: 'tomato' }, { id: 2, name: 'shannon', password: 'dogs' }]
 
 // parse application/x-www-form-urlencoded form data into req.body
@@ -61,15 +78,14 @@ app.post("/login", (req, res) => {
   }
 })
 
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
 
 app.get("/secret", (req, res) => {
-  console.log("SESSION: ", req.session)
   // render the views/secret.ejs file
-  if(req.session.user_id) {
-    res.render("secret")
-  } else {
-    res.redirect("/")
-  }
+  res.render("secret")
 });
 
 app.listen(PORT, () => {
